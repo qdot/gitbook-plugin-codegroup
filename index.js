@@ -5,6 +5,7 @@ const isEmpty = require('lodash/isEmpty');
 const pretty = require('pretty');
 const md5 = require('blueimp-md5');
 const boolean = require('boolean');
+const fs = require('fs');
 
 module.exports = {
 
@@ -59,11 +60,17 @@ module.exports = {
                     const active = i === 0 ? ' gbcg-active' : '';
                     let descriptor = trim(get(item, 'lang'));
                     descriptor = isEmpty(descriptor) ? defaultTabName : descriptor;
-                    let {langName, tabName, printTitle} = lib.parseDescriptor(descriptor, opts);
+                    let {langName, tabName, printTitle, fileName} = lib.parseDescriptor(descriptor, opts);
 
                     tabName = tabName || langName || defaultTabName;
                     printTitle = printTitle || tabName;
                     item.sanitizedBlock = item.block.replace(descriptor, langName);
+                    if (fileName !== undefined && fileName !== "") {
+                      const f = fs.readFileSync(fileName, 'utf8');
+                      // Wipe out everything after the first line, insert our
+                      // file, then a triple backtick.
+                      item.sanitizedBlock = item.sanitizedBlock.split("\n")[0] + "\n" + f + "\n```";
+                    }
 
                     const tabId = `${langName}-${i}-${lib.getHash(`${i}:${item.sanitizedBlock}`)}`;
                     const selectorId = `select-${tabId}`;
